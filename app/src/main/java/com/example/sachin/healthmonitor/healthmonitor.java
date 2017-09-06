@@ -14,10 +14,12 @@ public class healthmonitor extends AppCompatActivity {
     float[] values = {};
     String[] xValues = new String[]{"2700", "2750", "2800", "2850", "2900", "2950", "3000"};
     String[] yValues = new String[]{"2000", "1500", "1000", "500"};
+    //String[] xValues = new String[]{"0", "5", "10", "15"};
+    //String[] yValues = new String[]{"15", "10", "5", "0"};
     GraphView heartrategraph;
     LinearLayout graphlayout;
     boolean stopped = false;
-    float[] graphPoints = new float[25];
+    float[] graphPoints = new float[20];
     Thread thread;
 
     @Override
@@ -45,7 +47,7 @@ public class healthmonitor extends AppCompatActivity {
         }
         // The points to be plotted on graph.
         for(int i = 1; i < graphPoints.length; i++) {
-            graphPoints[i] = (float)(25 * Math.random());
+            graphPoints[i] = (float)(20 * Math.random());
         }
 
         // For the graph to be running till stop button is pressed, graph has to be run on a separate thread.

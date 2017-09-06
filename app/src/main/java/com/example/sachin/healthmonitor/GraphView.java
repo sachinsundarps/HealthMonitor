@@ -78,6 +78,7 @@ public class GraphView extends View {
 			float x = ((graphwidth / hors) * i) + horstart;
 			canvas.drawLine(x, height - border, x, border, paint);
 			paint.setTextAlign(Align.CENTER);
+            paint.setTextSize(28);
 			if (i==horlabels.length-1)
 				paint.setTextAlign(Align.RIGHT);
 			if (i==0)
