@@ -10,22 +10,21 @@
         android:layout_width="344dp"
         android:layout_height="495dp"
         android:orientation="vertical"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="8dp">
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp">
 
         <GridLayout
-            android:layout_width="344dp"
-            android:layout_height="200dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:rowCount="4"
-            android:columnCount="2"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="8dp">
+            android:columnCount="2">
 
             <TextView
                 android:id="@+id/patientID"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.01"
                 android:text="Patient ID"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
             <EditText
@@ -37,7 +36,6 @@
                 android:id="@+id/age"
                 android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.01"
                 android:text="Age"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
             <EditText
@@ -49,7 +47,6 @@
                 android:id="@+id/patientName"
                 android:layout_width="95dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.01"
                 android:text="Patient Name"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
             <EditText
@@ -61,7 +58,6 @@
                 android:id="@+id/Sex"
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.01"
                 android:text="Sex"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
             <LinearLayout>
@@ -83,6 +79,14 @@
 
                 </RadioGroup>
             </LinearLayout>
+        </GridLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
 
             <Button
                 android:id="@+id/runbutton"
@@ -91,8 +95,8 @@
                 android:text="Run"
                 android:onClick="onClickRunbutton"
                 android:background="@android:color/holo_green_dark"
-                tools:layout_editor_absoluteX="55dp"
-                tools:layout_editor_absoluteY="16dp" />
+                android:layout_marginRight="4dp" />
+
             <Button
                 android:id="@+id/stopbutton"
                 android:layout_width="wrap_content"
@@ -100,14 +104,21 @@
                 android:text="Stop"
                 android:onClick="onClickStopbutton"
                 android:background="@android:color/holo_red_dark"
-                tools:layout_editor_absoluteX="204dp"
-                tools:layout_editor_absoluteY="16dp" />
-        </GridLayout>
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/createdbbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create DB"
+                android:onClick="onClickCreateDbbutton"
+                android:background="@android:color/holo_blue_light" />
+        </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="341dp"
             android:layout_height="match_parent"
-            android:background="@android:color/black"
+            android:background="@android:color/white"
             android:orientation="horizontal"
             android:id="@+id/heartrategraphlayout" >
         </LinearLayout>

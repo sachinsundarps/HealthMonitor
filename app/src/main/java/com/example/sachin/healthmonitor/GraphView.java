@@ -52,73 +52,70 @@ public class GraphView extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		float border = 20;
+		float border = 30;
 		float horstart = border * 2;
-		float height = getHeight();
+		float height = getHeight() - 1;
 		float width = getWidth() - 1;
 		float max = getMax();
 		float min = getMin();
 		float diff = max - min;
 		float graphheight = height - (2 * border);
-		float graphwidth = width - (2 * border);
+		float graphwidth = width - (2 * border) - 50;
 
 
 		paint.setTextAlign(Align.LEFT);
 		int vers = verlabels.length - 1;
 		for (int i = 0; i < verlabels.length; i++) {
-			paint.setColor(Color.DKGRAY);
+			paint.setColor(Color.BLACK);
 			float y = ((graphheight / vers) * i) + border;
-			canvas.drawLine(horstart, y, width, y, paint);
-			paint.setColor(Color.WHITE);
-			canvas.drawText(verlabels[i], 0, y, paint);
+			canvas.drawLine(horstart, y, width - horstart + 10, y, paint);
+			paint.setColor(Color.BLACK);
+			paint.setTextSize(35);
+			canvas.drawText(verlabels[i], 0, y + 10, paint);
 		}
 		int hors = horlabels.length - 1;
 		for (int i = 0; i < horlabels.length; i++) {
-			paint.setColor(Color.DKGRAY);
+			paint.setColor(Color.BLACK);
 			float x = ((graphwidth / hors) * i) + horstart;
 			canvas.drawLine(x, height - border, x, border, paint);
-			paint.setTextAlign(Align.CENTER);
-            paint.setTextSize(28);
 			if (i==horlabels.length-1)
 				paint.setTextAlign(Align.RIGHT);
 			if (i==0)
 				paint.setTextAlign(Align.LEFT);
-			paint.setColor(Color.WHITE);
+			paint.setColor(Color.BLACK);
+			paint.setTextSize(35);
 			canvas.drawText(horlabels[i], x, height - 4, paint);
 		}
 
 		paint.setTextAlign(Align.CENTER);
+        paint.setTextSize(40);
 		canvas.drawText(title, (graphwidth / 2) + horstart, border - 4, paint);
-
-		if (max != min) {
-			paint.setColor(Color.LTGRAY);
-			if (type == BAR) {
-				float datalength = values.length;
-				float colwidth = (width - (2 * border)) / datalength;
-				for (int i = 0; i < values.length; i++) {
-					float val = values[i] - min;
-					float rat = val / diff;
-					float h = graphheight * rat;
-					canvas.drawRect((i * colwidth) + horstart, (border - h) + graphheight, ((i * colwidth) + horstart) + (colwidth - 1), height - (border - 1), paint);
-				}
-			} else {
-				float datalength = values.length;
-				float colwidth = (width - (2 * border)) / datalength;
-				float halfcol = colwidth / 2;
-				float lasth = 0;
-				for (int i = 0; i < values.length; i++) {
-					float val = values[i] - min;
-					float rat = val / diff;
-					float h = graphheight * rat;
-					if (i > 0)
-						paint.setColor(Color.GREEN);
-						paint.setStrokeWidth(2.0f);
-
-						canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasth) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - h) + graphheight, paint);
-					lasth = h;
-				}
-			}
-		}
+			paint.setColor(Color.BLACK);
+			float datalength = values.length;
+			float colwidth = (width - (2 * border)) / datalength;
+			float halfcol = colwidth / 2;
+			float lasth = 0;
+			for (int i = 0; i < values.length; i++) {
+                float h;
+                if (values[i] > 0) {
+                    float m = new Float(verlabels[0]) * 2;
+                    float p = ((values[i] * 2) / m) * 100;
+                    h = (graphheight * p) / 100;
+                } else if (values[i] < 0) {
+                    float m = new Float(verlabels[0]);
+                    float p = ((values[i]) / m) * 100;
+                    h = (graphheight * p) / 100;
+                } else {
+                    h = graphheight / 2;
+                }
+                System.out.println(h + " " + graphheight + " " + values[i]);
+                if (i > 0) {
+                    paint.setColor(Color.BLUE);
+                    paint.setStrokeWidth(10.0f);
+                    canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasth) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - h) + graphheight, paint);
+                }
+                lasth = h;
+            }
 	}
 
 	private float getMax() {
