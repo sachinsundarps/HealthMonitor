@@ -47,7 +47,6 @@ public class acclerometerUpdate extends Service implements SensorEventListener {
                 accelManage.registerListener(this, senseAccel, 1000);
             }
         }
-
     }
 
     //Register the sensorManager to listen to accelerometer sensor

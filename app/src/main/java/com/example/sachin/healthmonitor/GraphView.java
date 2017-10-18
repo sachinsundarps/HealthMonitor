@@ -105,14 +105,15 @@ public class GraphView extends View {
                     float m = new Float(verlabels[0]);
                     float p = ((values[i]) / m) * 100;
                     h = (graphheight * p) / 100;
+					h += graphheight;
                 } else {
                     h = graphheight / 2;
                 }
-                System.out.println(h + " " + graphheight + " " + values[i]);
                 if (i > 0) {
                     paint.setColor(Color.BLUE);
                     paint.setStrokeWidth(10.0f);
                     canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasth) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - h) + graphheight, paint);
+					paint.setStrokeWidth(4.0f);
                 }
                 lasth = h;
             }
