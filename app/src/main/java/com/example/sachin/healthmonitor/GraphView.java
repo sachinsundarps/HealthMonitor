@@ -17,18 +17,28 @@ public class GraphView extends View {
 	public static boolean LINE = true;
 
 	private Paint paint;
-	private float[] values;
+	private float[] xvalues;
+	private float[] yvalues;
+	private float[] zvalues;
 	private String[] horlabels;
 	private String[] verlabels;
 	private String title;
 	private boolean type;
 
-	public GraphView(Context context, float[] values, String title, String[] horlabels, String[] verlabels, boolean type) {
+	public GraphView(Context context, float[] xvalues, float[] yvalues, float[] zvalues, String title, String[] horlabels, String[] verlabels, boolean type) {
 		super(context);
-		if (values == null)
-			values = new float[0];
+		if (xvalues == null)
+			xvalues = new float[0];
 		else
-			this.values = values;
+			this.xvalues = xvalues;
+		if (yvalues == null)
+			yvalues = new float[0];
+		else
+			this.yvalues = yvalues;
+		if (zvalues == null)
+			zvalues = new float[0];
+		else
+			this.zvalues = zvalues;
 		if (title == null)
 			title = "";
 		else
@@ -45,9 +55,17 @@ public class GraphView extends View {
 		paint = new Paint();
 	}
 
-	public void setValues(float[] newValues)
+	public void setxValues(float[] newValues)
 	{
-		this.values = newValues;
+		this.xvalues = newValues;
+	}
+	public void setyValues(float[] newValues)
+	{
+		this.yvalues = newValues;
+	}
+	public void setzValues(float[] newValues)
+	{
+		this.zvalues = newValues;
 	}
 
 	@Override
@@ -91,39 +109,75 @@ public class GraphView extends View {
         paint.setTextSize(40);
 		canvas.drawText(title, (graphwidth / 2) + horstart, border - 4, paint);
 			paint.setColor(Color.BLACK);
-			float datalength = values.length;
+			float datalength = xvalues.length;
 			float colwidth = (width - (2 * border)) / datalength;
 			float halfcol = colwidth / 2;
 			float lasth = 0;
-			for (int i = 0; i < values.length; i++) {
-                float h;
-                if (values[i] > 0) {
-                    float m = new Float(verlabels[0]) * 2;
-                    float p = ((values[i] * 2) / m) * 100;
-                    h = (graphheight * p) / 100;
-                } else if (values[i] < 0) {
-                    float m = new Float(verlabels[0]);
-                    float p = ((values[i]) / m) * 100;
-                    h = (graphheight * p) / 100;
-					h += graphheight;
-                } else {
-                    h = graphheight / 2;
-                }
-                if (i > 0) {
-                    paint.setColor(Color.BLUE);
-                    paint.setStrokeWidth(10.0f);
-                    canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasth) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - h) + graphheight, paint);
-					paint.setStrokeWidth(4.0f);
-                }
-                lasth = h;
-            }
+		float lasthy = 0;
+		float lasthz = 0;
+		for (int i = 0; i < xvalues.length; i++) {
+			float h;
+			if (xvalues[i] > 0) {
+				float m = new Float(verlabels[0]) * 2;
+				float p = ((xvalues[i] * 2) / m) * 100;
+				h = (graphheight * p) / 100;
+			} else if (xvalues[i] < 0) {
+				float m = new Float(verlabels[0]);
+				float p = ((xvalues[i]) / m) * 100;
+				h = (graphheight * p) / 100;
+				h += graphheight;
+			} else {
+				h = graphheight / 2;
+			}
+
+			float hy;
+			if (yvalues[i] > 0) {
+				float my = new Float(verlabels[0]) * 2;
+				float py = ((yvalues[i] * 2) / my) * 100;
+				hy = (graphheight * py) / 100;
+			} else if (yvalues[i] < 0) {
+				float my = new Float(verlabels[0]);
+				float py = ((yvalues[i]) / my) * 100;
+				hy = (graphheight * py) / 100;
+				hy += graphheight;
+			} else {
+				hy = graphheight / 2;
+			}
+
+			float hz;
+			if (zvalues[i] > 0) {
+				float mz = new Float(verlabels[0]) * 2;
+				float pz = ((zvalues[i] * 2) / mz) * 100;
+				hz = (graphheight * pz) / 100;
+			} else if (zvalues[i] < 0) {
+				float mz = new Float(verlabels[0]);
+				float pz = ((zvalues[i]) / mz) * 100;
+				hz = (graphheight * pz) / 100;
+				hz += graphheight;
+			} else {
+				hz = graphheight / 2;
+			}
+			if (i > 0) {
+				paint.setColor(Color.BLUE);
+				paint.setStrokeWidth(8.0f);
+				canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasth) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - h) + graphheight, paint);
+				paint.setColor(Color.GREEN);
+				canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasthy) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - hy) + graphheight, paint);
+				paint.setColor(Color.RED);
+				canvas.drawLine(((i - 1) * colwidth) + (horstart + 1) + halfcol, (border - lasthz) + graphheight, (i * colwidth) + (horstart + 1) + halfcol, (border - hz) + graphheight, paint);
+				paint.setStrokeWidth(4.0f);
+			}
+				lasth = h;
+				lasthy = hy;
+			lasthz = hz;
+		}
 	}
 
 	private float getMax() {
 		float largest = Integer.MIN_VALUE;
-		for (int i = 0; i < values.length; i++)
-			if (values[i] > largest)
-				largest = values[i];
+		for (int i = 0; i < xvalues.length; i++)
+			if (xvalues[i] > largest)
+				largest = xvalues[i];
 
 		//largest = 3000;
 		return largest;
@@ -131,9 +185,9 @@ public class GraphView extends View {
 
 	private float getMin() {
 		float smallest = Integer.MAX_VALUE;
-		for (int i = 0; i < values.length; i++)
-			if (values[i] < smallest)
-				smallest = values[i];
+		for (int i = 0; i < xvalues.length; i++)
+			if (xvalues[i] < smallest)
+				smallest = xvalues[i];
 
 		//smallest = 0;
 		return smallest;

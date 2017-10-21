@@ -28,6 +28,7 @@ public class acclerometerUpdate extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        System.out.println("sensor changed");
         Sensor accelerometer = event.sensor;
         float[] values = new float[3];
         if (accelerometer.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -52,6 +53,7 @@ public class acclerometerUpdate extends Service implements SensorEventListener {
     //Register the sensorManager to listen to accelerometer sensor
     @Override
     public void onCreate(){
+        System.out.println("service create");
         Toast.makeText(this, "Service Started", Toast.LENGTH_LONG).show();
         accelManage = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senseAccel = accelManage.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
