@@ -1,32 +1,19 @@
 package com.example.sachin.healthmonitor;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.sip.SipAudioCall;
-import android.os.Environment;
-import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Toast;
-
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,11 +21,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import static android.database.sqlite.SQLiteDatabase.OPEN_READWRITE;
 import static java.lang.Thread.sleep;
 
 public class healthmonitor extends AppCompatActivity {
@@ -47,11 +33,7 @@ public class healthmonitor extends AppCompatActivity {
     String[] xValues = new String[]{"0", "1", "2", "3", "4", "5"};
     String[] yValues = new String[]{"10", "5", "0", "-5", "-10"};
     GraphView heartrategraphx;
-    GraphView heartrategraphy;
-    GraphView heartrategraphz;
     LinearLayout graphlayoutx;
-    LinearLayout graphlayouty;
-    LinearLayout graphlayoutz;
     boolean stopped = false;
     boolean running = false;
 
@@ -68,23 +50,44 @@ public class healthmonitor extends AppCompatActivity {
     String patientName;
     String patientSex;
     String tableName = null;
+    String activityLabel;
     boolean male;
     boolean female;
+    boolean run;
+    boolean walk;
+    boolean jump;
     static boolean isRegistered = false;
     private View v;
     final float[] valuesx = new float[10];
     final float[] valuesy = new float[10];
     final float[] valuesz = new float[10];
+    int i = 0;
+    float[][] graphPoints = new float[50][3];
+
+    private String[] classes = {"Walking", "Running", "Jumping"};
+    private native int trainClassifierNative(String trainingFile, int kernelType,
+                                             int cost, float gamma, int isProb, String modelFile);
+    private native int doClassificationNative(float values[][], int indices[][],
+                                              int isProb, String modelFile, int labels[], double probs[]);
+    static {
+        System.loadLibrary("signal");
+    }
 
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            float[] graphPoints = new float[3];
-            graphPoints[0] = intent.getFloatExtra("xvalue", 0);
-            graphPoints[1] = intent.getFloatExtra("yvalue", 0);
-            graphPoints[2] = intent.getFloatExtra("zvalue", 0);
-            uploadDatatoDb(graphPoints);
-
+            if (i < 50) {
+                graphPoints[i][0] = intent.getFloatExtra("xvalue", 0);
+                graphPoints[i][1] = intent.getFloatExtra("yvalue", 0);
+                graphPoints[i][2] = intent.getFloatExtra("zvalue", 0);
+            }
+            if (i == 50) {
+                uploadDatatoDb(graphPoints);
+                stopService(startSenseService);
+                Toast.makeText(healthmonitor.this, "Data uploaded.", Toast.LENGTH_SHORT).show();
+            }
+            System.out.println(i);
+            i++;
         }
     };
 
@@ -104,9 +107,11 @@ public class healthmonitor extends AppCompatActivity {
             dbFile.mkdir();
         }
         serverUrl = "http://10.218.110.136/CSE535Fall17Folder/UploadToServer.php";
+        db = SQLiteDatabase.openOrCreateDatabase(dbFile + "/patientDb", null);
     }
 
     public void getEditTextData() {
+        /*
         patientID = ((EditText)findViewById(R.id.patientidText)).getText().toString();
         patientAge = ((EditText)findViewById(R.id.ageText)).getText().toString();
         patientName = ((EditText)findViewById(R.id.patientnameText)).getText().toString();
@@ -116,6 +121,17 @@ public class healthmonitor extends AppCompatActivity {
             patientSex = "M";
         } else if (female) {
             patientSex = "F";
+        }
+         */
+        walk = ((RadioButton)findViewById(R.id.walk)).isChecked();
+        run = ((RadioButton)findViewById(R.id.run)).isChecked();
+        jump = ((RadioButton)findViewById(R.id.jump)).isChecked();
+        if (walk) {
+            activityLabel = "walk";
+        } else if (run) {
+            activityLabel = "run";
+        } else {
+            activityLabel = "jump";
         }
     }
 
@@ -135,12 +151,17 @@ public class healthmonitor extends AppCompatActivity {
         super.onPause();
     }
 
-    public void onClickRunbutton(View V) throws InterruptedException {
+    public void onClickRadio(View V) {
+        i = 0;
+        getEditTextData();
+    }
 
+    public void onClickRunbutton(View V) throws InterruptedException {
         stopped = false;
 
         // Data entry is checked.
-        if (patientName.isEmpty() || patientAge.isEmpty() || patientID.isEmpty() || (male == false && female == false)) {
+        //if (patientName.isEmpty() || patientAge.isEmpty() || patientID.isEmpty() || (male == false && female == false)) {
+        if (activityLabel.isEmpty()) {
             Toast.makeText(this, "Enter all the required data!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -196,22 +217,21 @@ public class healthmonitor extends AppCompatActivity {
     public void onClickCreateDbbutton(View V) throws InterruptedException {
         getEditTextData();
         // Data entry is checked.
-        if (patientName.isEmpty() || patientAge.isEmpty() || patientID.isEmpty() || (male == false && female == false)) {
+        //if (patientName.isEmpty() || patientAge.isEmpty() || patientID.isEmpty() || (male == false && female == false)) {
+        if (activityLabel.isEmpty()) {
             Toast.makeText(this, "Enter all the required data!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        int age = new Integer(patientAge);
-        tableName = patientName + "_" + patientID + "_" + age + "_" + patientSex;
+        //int age = new Integer(patientAge);
+        tableName = "activities";
         new Thread(new Runnable() {
             @Override
             public void run() {
-
-                db = SQLiteDatabase.openOrCreateDatabase(dbFile + "/patientDb", null);
                 try {
                     db.beginTransaction();
                     db.execSQL("create table if not exists " + tableName + " (timestamp timestamp, " +
-                            "xvalue float, yvalue float, zvalue float);");
+                            "xvalue float, yvalue float, zvalue float, activity_label varchar(20));");
                     db.setTransactionSuccessful();
                 } catch (Exception e) {
                     System.out.println(e);
@@ -233,15 +253,17 @@ public class healthmonitor extends AppCompatActivity {
         Toast.makeText(this, "Table created!", Toast.LENGTH_SHORT).show();
     }
 
-    public void uploadDatatoDb(float[] values) {
-
+    public void uploadDatatoDb(float[][] values) {
         // Create a Database if already not created and insert the accelerometer data.
         try {
             String timestamp = String.valueOf(System.currentTimeMillis());
             if (tableName != null) {
-                db.execSQL("insert into " + tableName + "(timestamp, xvalue, yvalue, zvalue) values " +
-                        "(" + timestamp + ", " + values[0] + ", " + values[1] + ", " + values[2] + " );");
+                for (int i = 0; i < 50; i++) {
+                    db.execSQL("insert into " + tableName + "(timestamp, xvalue, yvalue, zvalue, activity_label) values " +
+                            "(" + timestamp + ", " + values[i][0] + ", " + values[i][1] + ", " +
+                            values[i][2] + ", '" + activityLabel + "' );");
                 }
+            }
         } catch (Exception e) {
             System.out.println(e);
             Toast.makeText(this, "Database insert failed!!", Toast.LENGTH_SHORT).show();
@@ -365,7 +387,6 @@ public class healthmonitor extends AppCompatActivity {
     }
 
     private void downloadDB() throws IOException {
-
         // Referred http://www.coderzheaven.com/2012/04/29/download-file-android-device-remote-server-custom-progressbar-showing-progress/
         try {
             URL url = new URL("http://10.218.110.136/CSE535Fall17Folder/patientDb");
@@ -409,14 +430,14 @@ public class healthmonitor extends AppCompatActivity {
             });
             return;
         }
-
     }
 
     public void getDatafromDb(float[] valuesx, float[] valuesy, float[] valuesz) {
         getEditTextData();
         float[] timestamp = null;
-        int age = new Integer(patientAge);
-        tableName = patientName + "_" + patientID + "_" + age + "_" + patientSex;
+        //int age = new Integer(patientAge);
+        //tableName = patientName + "_" + patientID + "_" + age + "_" + patientSex;
+        tableName = "activities";
 
         // Select the latest 10 seconds data from the database.
         try {
@@ -436,4 +457,139 @@ public class healthmonitor extends AppCompatActivity {
         }
     }
 
+    public void onClickTrainbutton(View V) throws InterruptedException, JSONException {
+        tableName = "activities";
+        float valuex;
+        float valuey;
+        float valuez;
+        String label;
+        try {
+            String query = "select * from " + tableName + ";";
+            Cursor cursor = db.rawQuery(query, null);
+            String trainFilePath = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/training_set";
+            /*File trainSet = new File(trainFilePath);
+            FileOutputStream fos = new FileOutputStream(trainSet);
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+            while (cursor.moveToNext()) {
+                valuex = cursor.getFloat(cursor.getColumnIndex("xvalue"));
+                valuey = cursor.getFloat(cursor.getColumnIndex("yvalue"));
+                valuez = cursor.getFloat(cursor.getColumnIndex("zvalue"));
+                label = cursor.getString(cursor.getColumnIndex("activity_label"));
+                if (label.equals("walk")) {
+                    bw.write("0 " + "1:" + valuex + " 2:" + valuey + " 3:" + valuez);
+                    bw.newLine();
+                } else if (label.equals("run")) {
+                    bw.write("1 " + "1:" + valuex + " 2:" + valuey + " 3:" + valuez);
+                    bw.newLine();
+                } else {
+                    bw.write("2 " + "1:" + valuex + " 2:" + valuey + " 3:" + valuez);
+                    bw.newLine();
+                }
+            }
+            bw.close();
+            fos.close();*/
+
+            // SVM training
+            String trainedFilePath = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/trained_set";
+            int kernelType = 2;
+            int cost = 4;
+            int isProb = 0;
+            float gamma = 0.25f;
+            if (trainClassifierNative(trainFilePath, kernelType, cost, gamma, isProb,
+                    trainedFilePath) == -1) {
+                finish();
+            }
+            Toast.makeText(this, "Training is done", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            System.out.println(e);
+            Toast.makeText(this, "Database read failed!!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+    }
+
+    /**
+     * classify generate labels for features.
+     * Return:
+     * 	-1: Error
+     * 	0: Correct
+     */
+    public int callSVM(float values[][], int indices[][], int groundTruth[], int isProb, String modelFile,
+                       int labels[], double probs[]) {
+        // SVM type
+        final int C_SVC = 0;
+        final int NU_SVC = 1;
+        final int ONE_CLASS_SVM = 2;
+        final int EPSILON_SVR = 3;
+        final int NU_SVR = 4;
+
+        // For accuracy calculation
+        int correct = 0;
+        int total = 0;
+        float error = 0;
+        float sump = 0, sumt = 0, sumpp = 0, sumtt = 0, sumpt = 0;
+        float MSE, SCC, accuracy;
+
+        int num = values.length;
+        int svm_type = C_SVC;
+        if (num != indices.length)
+            return -1;
+        // If isProb is true, you need to pass in a real double array for probability array
+        int r = doClassificationNative(values, indices, isProb, modelFile, labels, probs);
+
+        // Calculate accuracy
+        if (groundTruth != null) {
+            if (groundTruth.length != indices.length) {
+                return -1;
+            }
+            for (int i = 0; i < num; i++) {
+                int predict_label = labels[i];
+                int target_label = groundTruth[i];
+                if(predict_label == target_label)
+                    ++correct;
+                error += (predict_label-target_label)*(predict_label-target_label);
+                sump += predict_label;
+                sumt += target_label;
+                sumpp += predict_label*predict_label;
+                sumtt += target_label*target_label;
+                sumpt += predict_label*target_label;
+                ++total;
+            }
+
+            if (svm_type==NU_SVR || svm_type==EPSILON_SVR)
+            {
+                MSE = error/total; // Mean square error
+                SCC = ((total*sumpt-sump*sumt)*(total*sumpt-sump*sumt)) / ((total*sumpp-sump*sump)*(total*sumtt-sumt*sumt)); // Squared correlation coefficient
+            }
+            accuracy = (float)correct/total*100;
+            System.out.println("Classification accuracy is " + accuracy);
+        }
+
+        return r;
+    }
+
+    // SVM classification
+    public void onClickClassifybutton(View V) {
+        float[][] values = {
+                {-1, 5, 8},
+        };
+        int[][] indices = {
+                {1,2,3}
+        };
+        int[] groundTruth = null;
+        int[] labels = new int[1];
+        double[] probs = new double[1];
+        int isProb = 0; // Not probability prediction
+        String modelFileLoc = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/trained_set";
+
+        if (callSVM(values, indices, groundTruth, isProb, modelFileLoc, labels, probs) != 0) {
+            Toast.makeText(this, "Classification is incorrect", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            String m = "";
+            for (int l : labels)
+                m += classes[l] + ", ";
+            System.out.println("Classification is done, the result is " + m);
+            Toast.makeText(this, "Classification is done, the result is " + m, Toast.LENGTH_SHORT).show();
+        }
+    }
 }

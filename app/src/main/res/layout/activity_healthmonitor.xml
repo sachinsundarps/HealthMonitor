@@ -20,71 +20,62 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <GridLayout
-                android:layout_width="287dp"
+            <LinearLayout
+                android:layout_width="160dp"
                 android:layout_height="wrap_content"
-                android:rowCount="4"
-                android:columnCount="2">
+                android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/patientID"
+                <RadioGroup
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Patient ID"
-                    android:textAppearance="@style/TextAppearance.AppCompat" />
-                <EditText
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/patientidText" />
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/age"
-                    android:layout_width="40dp"
-                    android:layout_height="wrap_content"
-                    android:text="Age"
-                    android:textAppearance="@style/TextAppearance.AppCompat" />
-                <EditText
-                    android:layout_width="60dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/ageText"/>
-
-                <TextView
-                    android:id="@+id/patientName"
-                    android:layout_width="95dp"
-                    android:layout_height="wrap_content"
-                    android:text="Patient Name"
-                    android:textAppearance="@style/TextAppearance.AppCompat" />
-                <EditText
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/patientnameText"/>
-
-                <TextView
-                    android:id="@+id/Sex"
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:text="Sex"
-                    android:textAppearance="@style/TextAppearance.AppCompat" />
-                <LinearLayout>
-                    <RadioGroup
+                    <android.support.v7.widget.AppCompatRadioButton
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_height="30dp"
+                        android:text="Walking"
+                        android:id="@+id/walk"
+                        android:onClick="onClickRadio"/>
+                    <android.support.v7.widget.AppCompatRadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:text="Running"
+                        android:id="@+id/run"
+                        android:onClick="onClickRadio"/>
+                    <android.support.v7.widget.AppCompatRadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:text="Jumping"
+                        android:id="@+id/jump"
+                        android:onClick="onClickRadio"/>
 
-                        <android.support.v7.widget.AppCompatRadioButton
-                            android:layout_width="wrap_content"
-                            android:layout_height="30dp"
-                            android:text="Male"
-                            android:id="@+id/maleradio"/>
-                        <android.support.v7.widget.AppCompatRadioButton
-                            android:layout_width="wrap_content"
-                            android:layout_height="30dp"
-                            android:text="Female"
-                            android:id="@+id/femaleradio"/>
+                </RadioGroup>
+            </LinearLayout>
 
-                    </RadioGroup>
-                </LinearLayout>
-            </GridLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingRight="8dp">
+
+                <Button
+                    android:id="@+id/trainData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/holo_blue_light"
+                    android:onClick="onClickTrainbutton"
+                    android:text="Train"
+                    android:layout_marginBottom="4dp" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/holo_blue_light"
+                    android:onClick="onClickClassifybutton"
+                    android:text="Classify"/>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -101,7 +92,6 @@
                     android:background="@android:color/holo_blue_light"
                     android:onClick="onClickUploadDbbutton"
                     android:text="Upload DB"
-                    android:textSize="8dp"
                     android:layout_marginBottom="4dp" />
 
                 <Button
@@ -109,8 +99,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/holo_blue_light"
                     android:onClick="onClickDownloadDbbutton"
-                    android:text="Download DB"
-                    android:textSize="8dp"/>
+                    android:text="Download DB"/>
             </LinearLayout>
 
         </LinearLayout>
