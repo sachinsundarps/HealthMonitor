@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.opengl.GLES20;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -26,6 +27,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import static java.lang.Thread.sleep;
+import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
+
 
 public class healthmonitor extends AppCompatActivity {
 
@@ -562,6 +566,7 @@ public class healthmonitor extends AppCompatActivity {
             }
             accuracy = (float)correct/total*100;
             System.out.println("Classification accuracy is " + accuracy);
+            Toast.makeText(this, "Classification accuracy is " + accuracy, Toast.LENGTH_SHORT).show();
         }
 
         return r;
@@ -575,7 +580,7 @@ public class healthmonitor extends AppCompatActivity {
         int[][] indices = {
                 {1,2,3}
         };
-        int[] groundTruth = null;
+        int[] groundTruth = {2};
         int[] labels = new int[1];
         double[] probs = new double[1];
         int isProb = 0; // Not probability prediction
@@ -591,5 +596,9 @@ public class healthmonitor extends AppCompatActivity {
             System.out.println("Classification is done, the result is " + m);
             Toast.makeText(this, "Classification is done, the result is " + m, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void draw3d() {
+        ;
     }
 }
