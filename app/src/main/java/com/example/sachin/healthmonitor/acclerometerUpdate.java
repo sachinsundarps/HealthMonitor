@@ -45,7 +45,7 @@ public class acclerometerUpdate extends Service implements SensorEventListener {
             if (i >= 127) {
                 i = 0;
                 accelManage.unregisterListener(this);
-                accelManage.registerListener(this, senseAccel, SensorManager.SENSOR_DELAY_FASTEST);
+                accelManage.registerListener(this, senseAccel, 500000);
             }
         }
     }
@@ -57,7 +57,7 @@ public class acclerometerUpdate extends Service implements SensorEventListener {
         Toast.makeText(this, "Service Started", Toast.LENGTH_LONG).show();
         accelManage = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senseAccel = accelManage.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        accelManage.registerListener(this, senseAccel, SensorManager.SENSOR_DELAY_FASTEST);
+        accelManage.registerListener(this, senseAccel, 500000);
     }
 
     @Override

@@ -62,6 +62,7 @@
                         android:text="Gamma:"
                         android:textColor="@android:color/black"/>
                     <EditText
+                        android:id="@+id/gamma"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0.25"
@@ -73,6 +74,7 @@
                         android:text="Cost:"
                         android:textColor="@android:color/black"/>
                     <EditText
+                        android:id="@+id/cost"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="4"
@@ -172,16 +174,19 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="341dp"
-            android:layout_height="0dp"
-            android:background="@android:color/white"
-            android:orientation="horizontal"
-            android:id="@+id/heartrategraphlayout"
-            tools:layout_editor_absoluteY="8dp"
-            tools:layout_editor_absoluteX="0dp">
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plot points"
+                android:id="@+id/plotgraph"
+                android:onClick="onClickPlotGraph"
+                android:background="@android:color/holo_blue_light"/>
+
         </LinearLayout>
 
     </LinearLayout>
-
 
 </android.support.constraint.ConstraintLayout>

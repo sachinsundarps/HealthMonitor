@@ -10,6 +10,7 @@ import android.opengl.GLES20;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -84,13 +85,15 @@ public class healthmonitor extends AppCompatActivity {
                 graphPoints[i][0] = intent.getFloatExtra("xvalue", 0);
                 graphPoints[i][1] = intent.getFloatExtra("yvalue", 0);
                 graphPoints[i][2] = intent.getFloatExtra("zvalue", 0);
+                System.out.println("sensor" + i);
             }
             if (i == 50) {
                 uploadDatatoDb(graphPoints);
                 stopService(startSenseService);
                 Toast.makeText(healthmonitor.this, "Data uploaded.", Toast.LENGTH_SHORT).show();
+                i = 0;
             }
-            System.out.println(i);
+            System.out.println("sensor" + i);
             i++;
         }
     };
@@ -101,8 +104,8 @@ public class healthmonitor extends AppCompatActivity {
         setContentView(R.layout.activity_healthmonitor);
         // Create a graph view using GraphView.java given and add it to a layout.
         heartrategraphx = new GraphView(this, values, values, values, "Health Monitor", xValues, yValues, true);
-        graphlayoutx = (LinearLayout) findViewById(R.id.heartrategraphlayout);
-        graphlayoutx.addView(heartrategraphx);
+        //graphlayoutx = (LinearLayout) findViewById(R.id.heartrategraphlayout);
+        //graphlayoutx.addView(heartrategraphx);
 
         System.out.println("App create");
         filter = new IntentFilter("com.example.sachin.healthmonitor");
@@ -134,8 +137,10 @@ public class healthmonitor extends AppCompatActivity {
             activityLabel = "walk";
         } else if (run) {
             activityLabel = "run";
-        } else {
+        } else if(jump){
             activityLabel = "jump";
+        } else {
+            activityLabel = "";
         }
     }
 
@@ -162,10 +167,10 @@ public class healthmonitor extends AppCompatActivity {
 
     public void onClickRunbutton(View V) throws InterruptedException {
         stopped = false;
-
+        getEditTextData();
         // Data entry is checked.
         //if (patientName.isEmpty() || patientAge.isEmpty() || patientID.isEmpty() || (male == false && female == false)) {
-        if (activityLabel.isEmpty()) {
+        /*if (activityLabel.isEmpty()) {
             Toast.makeText(this, "Enter all the required data!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -203,18 +208,14 @@ public class healthmonitor extends AppCompatActivity {
 
             }
         });
-        thread.start();
+        thread.start();*/
         findViewById(R.id.runbutton).setEnabled(false);
     }
 
     public void onClickStopbutton(View V) throws InterruptedException {
         stopped = true;
         // Graph is cleared.
-        graphlayoutx.removeView(heartrategraphx);
-        heartrategraphx.setxValues(values);
-        heartrategraphx.setyValues(values);
-        heartrategraphx.setzValues(values);
-        graphlayoutx.addView(heartrategraphx);
+
         findViewById(R.id.runbutton).setEnabled(true);
     }
 
@@ -371,7 +372,6 @@ public class healthmonitor extends AppCompatActivity {
             fis.close();
             return;
         }
-
     }
 
     public void onClickDownloadDbbutton(View V) throws InterruptedException, JSONException {
@@ -462,14 +462,14 @@ public class healthmonitor extends AppCompatActivity {
     }
 
     public void onClickTrainbutton(View V) throws InterruptedException, JSONException {
-        tableName = "activities";
+        //tableName = "activities";
         float valuex;
         float valuey;
         float valuez;
         String label;
         try {
-            String query = "select * from " + tableName + ";";
-            Cursor cursor = db.rawQuery(query, null);
+            //String query = "select * from " + tableName + ";";
+            //Cursor cursor = db.rawQuery(query, null);
             String trainFilePath = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/training_set";
             /*File trainSet = new File(trainFilePath);
             FileOutputStream fos = new FileOutputStream(trainSet);
@@ -493,17 +493,19 @@ public class healthmonitor extends AppCompatActivity {
             bw.close();
             fos.close();*/
 
+            String gammaText = ((EditText)findViewById(R.id.gamma)).getText().toString();
+            String costText = ((EditText)findViewById(R.id.cost)).getText().toString();
             // SVM training
             String trainedFilePath = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/trained_set";
             int kernelType = 2;
-            int cost = 4;
+            int cost = Integer.parseInt(costText);
             int isProb = 0;
-            float gamma = 0.25f;
+            float gamma = Float.parseFloat(gammaText);
             if (trainClassifierNative(trainFilePath, kernelType, cost, gamma, isProb,
                     trainedFilePath) == -1) {
                 finish();
             }
-            Toast.makeText(this, "Training is done", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Training is done, cost=" + cost + ", gamma=" + gamma, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             System.out.println(e);
             Toast.makeText(this, "Database read failed!!", Toast.LENGTH_SHORT).show();
@@ -511,13 +513,7 @@ public class healthmonitor extends AppCompatActivity {
         }
     }
 
-    /**
-     * classify generate labels for features.
-     * Return:
-     * 	-1: Error
-     * 	0: Correct
-     */
-    public int callSVM(float values[][], int indices[][], int groundTruth[], int isProb, String modelFile,
+    public float callSVM(float values[][], int indices[][], int groundTruth[], int isProb, String modelFile,
                        int labels[], double probs[]) {
         // SVM type
         final int C_SVC = 0;
@@ -531,14 +527,18 @@ public class healthmonitor extends AppCompatActivity {
         int total = 0;
         float error = 0;
         float sump = 0, sumt = 0, sumpp = 0, sumtt = 0, sumpt = 0;
-        float MSE, SCC, accuracy;
+        float MSE, SCC, accuracy = 0;
 
         int num = values.length;
         int svm_type = C_SVC;
         if (num != indices.length)
             return -1;
         // If isProb is true, you need to pass in a real double array for probability array
-        int r = doClassificationNative(values, indices, isProb, modelFile, labels, probs);
+        try {
+            int r = doClassificationNative(values, indices, isProb, modelFile, labels, probs);
+        } catch (Exception e) {
+            Toast.makeText(this, "Retry", Toast.LENGTH_SHORT).show();
+        }
 
         // Calculate accuracy
         if (groundTruth != null) {
@@ -565,28 +565,43 @@ public class healthmonitor extends AppCompatActivity {
                 SCC = ((total*sumpt-sump*sumt)*(total*sumpt-sump*sumt)) / ((total*sumpp-sump*sump)*(total*sumtt-sumt*sumt)); // Squared correlation coefficient
             }
             accuracy = (float)correct/total*100;
-            System.out.println("Classification accuracy is " + accuracy);
-            Toast.makeText(this, "Classification accuracy is " + accuracy, Toast.LENGTH_SHORT).show();
         }
 
-        return r;
+        return accuracy;
     }
 
     // SVM classification
     public void onClickClassifybutton(View V) {
         float[][] values = {
-                {-1, 5, 8},
+                {(float) 2.7590625, (float) 8.655601, (float) 1.7627344},
+                {(float) 2.1028273, (float) 8.722662, (float) 3.5685792},
+                {(float) 2.1315675, (float) 9.426797, (float) 5.374424},
+                {(float) -10.035132, (float) 8.904683, (float) 1.8154249},
+                {(float) 10.734478, (float) 10.844649, (float) 5.326524},
+                {(float) -13.263618, (float) 7.074888, (float) 4.176914},
+                {(float) -0.8047266, (float) 9.431587, (float) 3.8128712},
+                {(float) -2.3135889, (float) 6.8497562, (float) 0.45505372},
+                {(float) -2.2848487, (float) 11.328443, (float) 3.1039455},
         };
         int[][] indices = {
-                {1,2,3}
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
+                {1, 2, 3},
         };
-        int[] groundTruth = {2};
-        int[] labels = new int[1];
-        double[] probs = new double[1];
+        int[] groundTruth = {0, 0, 0, 1, 1, 1, 2, 2, 2};
+        int[] labels = new int[9];
+        double[] probs = new double[9];
         int isProb = 0; // Not probability prediction
         String modelFileLoc = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/trained_set";
 
-        if (callSVM(values, indices, groundTruth, isProb, modelFileLoc, labels, probs) != 0) {
+        float accuracy = callSVM(values, indices, groundTruth, isProb, modelFileLoc, labels, probs);
+        if (accuracy == -1) {
             Toast.makeText(this, "Classification is incorrect", Toast.LENGTH_SHORT).show();
         }
         else {
@@ -595,10 +610,155 @@ public class healthmonitor extends AppCompatActivity {
                 m += classes[l] + ", ";
             System.out.println("Classification is done, the result is " + m);
             Toast.makeText(this, "Classification is done, the result is " + m, Toast.LENGTH_SHORT).show();
+            System.out.println("Classification accuracy is " + accuracy);
+            Toast.makeText(this, "Classification accuracy is " + accuracy, Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void draw3d() {
-        ;
+    public void onClickPlotGraph(View V) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    uploadTrainingSet();
+                    //downloadPlot();
+                    sleep(1000);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        Intent graphIntent = new Intent(this, plotgraph.class);
+        startActivity(graphIntent);
+    }
+
+    public void uploadTrainingSet() throws IOException {
+        HttpURLConnection conn = null;
+        DataOutputStream dos = null;
+        int buffSize, bytesRead, available;
+        byte[] buffer;
+        int maxBuff = 1024 * 1024;
+        int responseCode = 0;
+        String filePath = this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2/";
+        File file = new File(filePath + "training_set");
+        file.createNewFile();
+        FileInputStream fis = null;
+
+        try {
+            fis = new FileInputStream(file);
+            URL url = new URL("https://sachin-3d.herokuapp.com/plot");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setUseCaches(false);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Connection", "Keep-Alive");
+            conn.setRequestProperty("ENCTYPE", "multipart/form-data");
+            conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=*****");
+            conn.setRequestProperty("file", "training_set");
+
+            dos = new DataOutputStream(conn.getOutputStream());
+            dos.writeBytes("--" + "*****" + "\r\n");
+            dos.writeBytes("Content-Disposition: form-data; name=\"file\";filename=\""
+                    + "training_set" + "\"\r\n");
+            dos.writeBytes("\r\n");
+
+            available = fis.available();
+            buffSize = Math.min(available, maxBuff);
+            buffer = new byte[buffSize];
+            bytesRead = fis.read(buffer, 0, buffSize);
+
+            while (bytesRead > 0) {
+                dos.write(buffer, 0, buffSize);
+                available = fis.available();
+                buffSize = Math.min(available, maxBuff);
+                bytesRead = fis.read(buffer, 0, buffSize);
+            }
+
+            dos.writeBytes("\r\n");
+            dos.writeBytes("--*****--\r\n");
+            responseCode = conn.getResponseCode();
+            String responseMessage = conn.getResponseMessage();
+            System.out.println("Response: " + responseMessage + ", " + responseCode);
+
+            fis.close();
+            dos.flush();
+            dos.close();
+            conn.disconnect();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(healthmonitor.this, "File does not exist!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            return;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(healthmonitor.this, "URL does not exist!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            fis.close();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+            fis.close();
+            return;
+        }
+    }
+
+    public void downloadPlot() throws IOException {
+        try {
+            URL url = new URL("https://sachin-3d.herokuapp.com/plot");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("GET");
+            conn.setDoOutput(true);
+            conn.connect();
+            dbFile = new File(this.getExternalFilesDir(null) + "/CSE535_ASSIGNMENT2");
+            if (!dbFile.exists() && !dbFile.isDirectory()) {
+                dbFile.mkdir();
+            }
+            File loc = new File(dbFile + "/plot");
+            FileOutputStream fos = new FileOutputStream(loc);
+            System.out.println("Respone:" + conn.getResponseMessage());
+            InputStream is = conn.getInputStream();
+            int size = conn.getContentLength();
+            int downloadedSize = 0;
+            byte[] buffer = new byte[1024];
+            int bufferLength = 0;
+            while ( (bufferLength = is.read(buffer)) > 0 ) {
+                fos.write(buffer, 0, bufferLength);
+                downloadedSize += bufferLength;
+            }
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(healthmonitor.this, "Plot downloaded!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            is.close();
+            fos.close();
+            conn.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(healthmonitor.this, "Error connecting to server!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            return;
+        } catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
     }
 }
